@@ -185,8 +185,7 @@ class Swarm:
     print(" -- Swarm --")
     for i in range(self.nSpiders):
         rounded_values = [int(round(val)) for val in self.swarm[i].x]  # Redondear los valores a enteros
-        print(f"x: {rounded_values}")
-
+        print(f"fit: {round(self.swarm[i].fit(),4)} " f"x: {rounded_values}")
   def bestToConsole(self):
     print(" -- Best --")
     print(f"{round(self.g.fit(), 4)}")  # Redondear el
