@@ -1,7 +1,9 @@
+import pandas as pd
 import random as rnd
 import math
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 C = 0.01
 
@@ -81,8 +83,6 @@ class Spider(Problem):
 
   def toString(self):
     return self.x
-  
-  
 
 class Swarm:
   def __init__(self):
@@ -92,7 +92,7 @@ class Swarm:
     self.g = Spider()
     self.iterations = []  # Lista para almacenar las iteraciones
     self.best_fitness = []  # Lista para almacenar el me
-    self.pareto_front = []
+    self.best_solutions = []
 
 
   def standard_deviation(self):
@@ -134,7 +134,8 @@ class Swarm:
           if a.isFeasible(): #Si a es factible
             break
         self.swarm[i].copy(a)
-
+      best_solution = max(self.swarm, key=lambda spider: spider.fit())  # Encontrar la mejor solución actual
+      self.best_solutions.append(best_solution)
       for i in range(self.nSpiders):
         if self.swarm[i].isBetterThan(self.g):
           self.g.copy(self.swarm[i])
@@ -154,26 +155,6 @@ class Swarm:
       self.bestToConsole()
       t = t + 1
 
-  def is_pareto_optimal(self, spider):
-    for other_spider in self.swarm:
-      if other_spider != spider:
-        if other_spider.isBetterThan(spider):
-          return False
-        return True
-
-  def plot_pareto_front(self):
-    # Extraer los valores de calidad y costo para la frontera de Pareto
-    quality_values = [spider.fit() for spider in self.pareto_front]
-    cost_values = [spider.calculate_cost() for spider in self.pareto_front]
-
-        # Graficar la frontera de Pareto
-    plt.figure()
-    plt.scatter(cost_values, quality_values)
-    plt.xlabel("Cost")
-    plt.ylabel("Quality")
-    plt.title("Pareto Front")
-    plt.grid(True)
-    plt.show()
   def plotConvergence(self):
     plt.figure()
     plt.plot(self.iterations, self.best_fitness, 'b-')
@@ -183,7 +164,6 @@ class Swarm:
     plt.show()
 
   def plotScatter(self):
-    # Crear una lista con las coordenadas (X, Y) de los puntos a representar en el gráfico de dispersión
     data_points = [(round(spider.x[0]), round(spider.x[1]), round(spider.x[2]), round(spider.x[3]), round(spider.x[4])) for spider in s.swarm]
 
     # Extraer los valores de X y Y en listas separadas para cada variable
@@ -192,40 +172,13 @@ class Swarm:
     x3_values = [point[2] for point in data_points]
     x4_values = [point[3] for point in data_points]
     x5_values = [point[4] for point in data_points]
-
-    # Crear el gráfico de dispersión para cada tipo de anuncio
+    data = pd.DataFrame({'TV Tarde': x1_values, 'TV Noche': x2_values, 'Diarios': x3_values, 'Revistas': x4_values, 'Radio': x5_values})
     plt.figure(figsize=(10, 6))
-    plt.subplot(2, 3, 1)
-    plt.scatter(x1_values, np.zeros(len(x1_values)), s=100, c='red')
-    plt.xlabel('Anuncios TV Tarde')
-    plt.ylabel('Clientes potenciales')
+    sns.boxplot(data=data)
+    plt.xlabel('Tipo de Anuncio')
+    plt.ylabel('Cantidad de Anuncios')
+    plt.title('Distribución de Cantidades de Anuncios por Tipo')
     plt.grid(True)
-
-    plt.subplot(2, 3, 2)
-    plt.scatter(x2_values, np.zeros(len(x2_values)), s=100, c='blue')
-    plt.xlabel('Anuncios TV Noche')
-    plt.ylabel('Clientes potenciales')
-    plt.grid(True)
-
-    plt.subplot(2, 3, 3)
-    plt.scatter(x3_values, np.zeros(len(x3_values)), s=100, c='green')
-    plt.xlabel('Anuncios Diarios')
-    plt.ylabel('Clientes potenciales')
-    plt.grid(True)
-
-    plt.subplot(2, 3, 4)
-    plt.scatter(x4_values, np.zeros(len(x4_values)), s=100, c='purple')
-    plt.xlabel('Anuncios Revistas')
-    plt.ylabel('Clientes potenciales')
-    plt.grid(True)
-
-    plt.subplot(2, 3, 5)
-    plt.scatter(x5_values, np.zeros(len(x5_values)), s=100, c='orange')
-    plt.xlabel('Anuncios Radio')
-    plt.ylabel('Clientes potenciales')
-    plt.grid(True)
-
-    plt.tight_layout()
     plt.show()
 
   def swarmToConsole(self):
@@ -246,6 +199,21 @@ try:
   s.solve(ra,pc,pm)
   s.plotConvergence()
   s.plotScatter()
-  s.plot_pareto_front()
+  # Obtener las calificaciones de calidad de las mejores soluciones
+  quality_scores = [best_solution.fit() for best_solution in s.best_solutions]
+
+    # Calcular las medidas de resumen descriptivo
+  mejor = max(quality_scores)
+  peor = min(quality_scores)
+  promedio = np.mean(quality_scores)
+  mediana = np.median(quality_scores)
+  desviacion_estandar = np.std(quality_scores)
+  rango_intercuartilico = np.percentile(quality_scores, 75) - np.percentile(quality_scores, 25)
+  print("Mejor:", mejor)
+  print("Peor:", peor)
+  print("Promedio:", promedio)
+  print("Mediana:", mediana)
+  print("Desviación Estándar:", desviacion_estandar)
+  print("Rango Intercuartílico:", rango_intercuartilico)
 except Exception as e:
   print(f"{e} \nCaused by {e.__cause__}")
